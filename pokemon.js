@@ -52,7 +52,7 @@ function displayPokemons(pokemon) {
     listItem.addEventListener("click", async () => {
       const success = await fetchPokemonDataBeforeRedirect(pokemonID);
       if (success) {
-        window.location.href = `./detail.html?id=${pokemonID}`;
+        window.location.href = `./details.html?id=${pokemonID}`;
       }
     });
 
@@ -90,3 +90,9 @@ function handleSearch() {
 
 const closeButton = document.querySelector(".search-close-icon");
 closeButton.addEventListener("click", clearSearch);
+
+function clearSearch() {
+  searchInput.value = "";
+  displayPokemons(allPokemons);
+  notFoundMessage.style.display = "none";
+}
