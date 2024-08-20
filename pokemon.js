@@ -8,9 +8,7 @@ const notFoundMessage = document.querySelector("#not-found-message");
 let allPokemons = [];
 
 fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
-  .then((response) => {
-    return response.json();
-  })
+  .then((response) => response.json())
   .then((data) => {
     allPokemons = data.results;
     displayPokemons(allPokemons);
@@ -19,49 +17,76 @@ fetch(`https://pokeapi.co/api/v2/pokemon?limit=${MAX_POKEMON}`)
 async function fetchPokemonDataBeforeRedirect(id) {
   try {
     const [pokemon, pokemonSpecies] = await Promise.all([
-      fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then((response) => {
-        response.json();
-      }),
-      fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then(
-        (response) => {
-          response.json();
-        }
+      fetch(`https://pokeapi.co/api/v2/pokemon/${id}`).then((res) =>
+        res.json()
+      ),
+      fetch(`https://pokeapi.co/api/v2/pokemon-species/${id}`).then((res) =>
+        res.json()
       ),
     ]);
     return true;
   } catch (error) {
-    console.eroor("데이터를 불러오는데 실패했습니다.");
+    console.error("Failed to fetch Pokemon data before redirect");
   }
 }
-
-// 포켓몬을 화면에 보여주는 함수
 
 function displayPokemons(pokemon) {
   listWrapper.innerHTML = "";
 
   pokemon.forEach((pokemon) => {
-    // https://pokeapi.co/api/v2/pokemon/${id}
-    const pokemonId = pokemon.url.split("/")[6];
+    const pokemonID = pokemon.url.split("/")[6];
     const listItem = document.createElement("div");
     listItem.className = "list-item";
     listItem.innerHTML = `
-        <div class = "number-wrap">
-            <p class="caption-fonts">#${pokemonId} </p>
+        <div class="number-wrap">
+            <p class="caption-fonts">#${pokemonID}</p>
         </div>
-        <div class = "img-wrap">
-            <img src = "https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonId}.svg" alt=${pokemon.name}/>
+        <div class="img-wrap">
+            <img src="https://raw.githubusercontent.com/pokeapi/sprites/master/sprites/pokemon/other/dream-world/${pokemonID}.svg" alt="${pokemon.name}" />
         </div>
-        <div class="name-wrap>
+        <div class="name-wrap">
             <p class="body3-fonts">#${pokemon.name}</p>
         </div>
-        `;
+    `;
 
     listItem.addEventListener("click", async () => {
-      const success = await fetchPokemonDataBeforeRedirect(pokemonId);
+      const success = await fetchPokemonDataBeforeRedirect(pokemonID);
       if (success) {
-        window.location.href = `./detail.html?id=${pokemonId}`;
+        window.location.href = `./detail.html?id=${pokemonID}`;
       }
     });
+
     listWrapper.appendChild(listItem);
   });
 }
+
+searchInput.addEventListener("keyup", handleSearch);
+
+function handleSearch() {
+  const searchTerm = searchInput.value.toLowerCase();
+  let filteredPokemons;
+
+  if (numberFilter.checked) {
+    filteredPokemons = allPokemons.filter((pokemon) => {
+      const pokemonID = pokemon.url.split("/")[6];
+      return pokemonID.startsWith(searchTerm);
+    });
+  } else if (nameFilter.checked) {
+    filteredPokemons = allPokemons.filter((pokemon) =>
+      pokemon.name.toLowerCase().startsWith(searchTerm)
+    );
+  } else {
+    filteredPokemons = allPokemons;
+  }
+
+  displayPokemons(filteredPokemons);
+
+  if (filteredPokemons.length === 0) {
+    notFoundMessage.style.display = "block";
+  } else {
+    notFoundMessage.style.display = "none";
+  }
+}
+
+const closeButton = document.querySelector(".search-close-icon");
+closeButton.addEventListener("click", clearSearch);
